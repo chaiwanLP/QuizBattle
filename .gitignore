@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Environment variables (keep the examples)
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+out/
+.next/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+
+# Next.js / Vercel
+next-env.d.ts
+.vercel/
+
+# Docker
+docker-compose.override.yml
+
+# IDE / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
