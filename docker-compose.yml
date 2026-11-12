@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: quiz-postgres
+    environment:
+      POSTGRES_USER: quiz
+      POSTGRES_PASSWORD: quiz_password
+      POSTGRES_DB: quiz_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: quiz-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
