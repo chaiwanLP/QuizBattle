@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { envSchema } from './config/env';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { QuizzesModule } from './quizzes/quizzes.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
@@ -17,6 +19,8 @@ import { RedisModule } from './redis/redis.module';
     PrismaModule,
     RedisModule,
     HealthModule,
+    AuthModule,
+    QuizzesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -13,6 +13,9 @@ export const envSchema = z.object({
   REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
   // Comma-separated list, e.g. "http://localhost:3001,https://app.example.com"
   CORS_ORIGINS: z.string().min(1).default('http://localhost:3001'),
+  JWT_SECRET: z
+    .string()
+    .min(32, { message: 'JWT_SECRET must be at least 32 characters' }),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -71,6 +71,9 @@ QuizBattle/
 │   ├── prisma/           # Schema + migrations
 │   └── src/
 │       ├── config/       # Env schema (Zod) validated at boot
+│       ├── auth/         # Host register/login, JWT cookie guard
+│       ├── users/        # User lookups + email normalization
+│       ├── quizzes/      # Quiz/question/option CRUD
 │       ├── health/       # GET /health (Postgres + Redis)
 │       ├── prisma/       # PrismaService (driver adapter)
 │       ├── redis/        # RedisService (shared ioredis client)
@@ -164,10 +167,54 @@ npm install
 Create `.env.local` (copy from `.env.example`), then:
 
 ```bash
-npm run dev -- -p 3001
+npm run dev
 ```
 
-The app runs at `http://localhost:3001`.
+The app runs at `http://localhost:3001` (the port is pinned in
+`frontend/package.json`).
+
+### 5. Use it
+
+1. Open `http://localhost:3001` and register as a host.
+2. Create a quiz from the dashboard. A new quiz starts with one placeholder
+   question that you can edit.
+3. Edit the title, questions, options and per-question time limit, then save.
+4. The session is kept in an `httpOnly` cookie, so the browser stays signed in
+   for 7 days.
+
+## API
+
+Auth uses a JWT stored in the `qb_session` **httpOnly cookie**. Clients that
+can't keep cookies (scripts, future mobile apps) may instead send
+`Authorization: Bearer <token>`; the login/register responses set the cookie but
+the token itself is not exposed in the JSON body.
+
+### Auth
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/auth/register` | Create a host account and start a session |
+| `POST` | `/auth/login` | Validate credentials and start a session |
+| `POST` | `/auth/logout` | Clear the session cookie |
+| `GET` | `/auth/me` | Current host (requires a session) |
+
+### Quizzes (all require a session)
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/quizzes` | List the current host's quizzes |
+| `POST` | `/quizzes` | Create a quiz with questions and options |
+| `GET` | `/quizzes/:id` | Quiz detail with ordered questions/options |
+| `PATCH` | `/quizzes/:id` | Update title and/or description |
+| `PUT` | `/quizzes/:id/questions` | Replace the whole question set (transactional) |
+| `DELETE` | `/quizzes/:id` | Delete a quiz and its questions |
+
+Validation rules: 1–100 questions, each with 2–6 options and exactly one correct
+option; `timeLimitSec` is 5–300 seconds (default 20). A quiz that belongs to a
+different host returns `404` so its existence isn't leaked.
+
+CSRF protection is enabled in Nest and trusts the origins listed in
+`CORS_ORIGINS`; state-changing requests from any other origin are rejected.
 
 ## Environment Variables
 
@@ -177,13 +224,15 @@ The app runs at `http://localhost:3001`.
 DATABASE_URL=postgresql://quiz:quiz_password@localhost:5432/quiz_db
 REDIS_URL=redis://localhost:6379
 CORS_ORIGINS=http://localhost:3001
-JWT_SECRET=change-me
+JWT_SECRET=dev-secret-change-me-0123456789abcdef
 PORT=3000
 ```
 
 `CORS_ORIGINS` is a comma-separated list, so the deployed frontend origin can be
-added without code changes. Missing or invalid variables stop the app at boot
-with a readable error (see `backend/src/config/env.ts`).
+added without code changes. `JWT_SECRET` must be at least 32 characters; use a
+random value in production (`openssl rand -base64 48`). Missing or invalid
+variables stop the app at boot with a readable error (see
+`backend/src/config/env.ts`).
 
 **frontend/.env.local**
 
@@ -197,7 +246,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 
 - [x] Project setup (Docker Compose, NestJS, Next.js)
 - [x] Infrastructure foundation: env validation, Prisma + migrations, Redis client, health checks
-- [ ] **Phase 1:** Auth for hosts, Quiz and Question CRUD
+- [x] **Phase 1:** Auth for hosts, Quiz and Question CRUD
 - [ ] **Phase 2:** Create room, join room, live lobby
 - [ ] **Phase 3:** Gameplay, timer, scoring, live leaderboard
 - [ ] **Phase 4:** Save results to PostgreSQL, game history, reconnect

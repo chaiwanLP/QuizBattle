@@ -1,69 +1,105 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+const features = [
+  {
+    icon: "✏️",
+    title: "สร้างควิซได้เอง",
+    body: "เพิ่มคำถาม ตัวเลือก และเวลาตอบต่อข้อได้อย่างอิสระ",
+  },
+  {
+    icon: "🔗",
+    title: "แชร์โค้ดห้อง",
+    body: "ให้ผู้เล่นเข้าห้องด้วย PIN เดียวกันจากมือถือ (กำลังมา)",
+  },
+  {
+    icon: "⚡",
+    title: "คะแนนเรียลไทม์",
+    body: "อันดับและคะแนนอัปเดตทันทีหลังแต่ละข้อ (กำลังมา)",
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-1 flex-col">
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-5 sm:px-6">
+        <div className="flex items-center gap-2">
+          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-black text-white">
+            Q
+          </span>
+          <span className="text-lg font-bold tracking-tight text-slate-50">
+            QuizBattle
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <nav className="flex items-center gap-2">
+          <Link
+            href="/login"
+            className="rounded-xl px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            เข้าสู่ระบบ
+          </Link>
+          <Link
+            href="/register"
+            className="rounded-xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:bg-violet-400"
           >
-            Documentation
-          </a>
+            เริ่มใช้งาน
+          </Link>
+        </nav>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6 sm:py-24">
+        <span className="rounded-full border border-violet-400/20 bg-violet-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">
+          Real-time quiz battle
+        </span>
+
+        <h1 className="mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight text-slate-50 sm:text-6xl">
+          เปลี่ยนบทเรียนให้เป็น{" "}
+          <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-sky-300 bg-clip-text text-transparent">
+            เกมตอบคำถาม
+          </span>{" "}
+          ที่ทุกคนอยากเล่น
+        </h1>
+
+        <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-400 sm:text-lg">
+          สร้างชุดคำถามของคุณเอง แชร์ให้ผู้เล่นเข้ามาตอบพร้อมกัน
+          แล้วดูคะแนนขึ้นกระดานแบบเรียลไทม์
+        </p>
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/register"
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-violet-500 px-8 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:bg-violet-400"
+          >
+            สร้างควิซแรกฟรี
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex h-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-8 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+          >
+            เข้าสู่ระบบ
+          </Link>
         </div>
+
+        <section className="mt-16 grid w-full gap-4 text-left sm:grid-cols-3">
+          {features.map((feature) => (
+            <div
+              key={feature.title}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur"
+            >
+              <span className="text-2xl">{feature.icon}</span>
+              <h2 className="mt-3 text-base font-semibold text-slate-100">
+                {feature.title}
+              </h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+                {feature.body}
+              </p>
+            </div>
+          ))}
+        </section>
       </main>
+
+      <footer className="mx-auto w-full max-w-5xl px-4 py-6 text-center text-xs text-slate-600 sm:px-6">
+        QuizBattle · Next.js + NestJS + PostgreSQL + Redis
+      </footer>
     </div>
   );
 }

@@ -11,9 +11,11 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
+const auth_module_1 = require("./auth/auth.module");
 const env_1 = require("./config/env");
 const health_module_1 = require("./health/health.module");
 const prisma_module_1 = require("./prisma/prisma.module");
+const quizzes_module_1 = require("./quizzes/quizzes.module");
 const redis_module_1 = require("./redis/redis.module");
 let AppModule = class AppModule {
 };
@@ -29,6 +31,8 @@ exports.AppModule = AppModule = __decorate([
             prisma_module_1.PrismaModule,
             redis_module_1.RedisModule,
             health_module_1.HealthModule,
+            auth_module_1.AuthModule,
+            quizzes_module_1.QuizzesModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
