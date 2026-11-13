@@ -1,0 +1,78 @@
+// Prisma schema for QuizBattle.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  // The NestJS project compiles to CommonJS (no "type": "module" in package.json).
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Phase 1: hosts, quizzes and questions
+// Game sessions / final results are added in Phase 4.
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quizzes Quiz[]
+
+  @@map("users")
+}
+
+model Quiz {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@index([ownerId])
+  @@map("quizzes")
+}
+
+model Question {
+  id           String   @id @default(uuid())
+  quizId       String
+  text         String
+  // Time limit in seconds, enforced by the server during a game.
+  timeLimitSec Int      @default(20)
+  // Display order inside the quiz (0-based).
+  position     Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options Option[]
+
+  @@unique([quizId, position])
+  @@map("questions")
+}
+
+model Option {
+  id         String  @id @default(uuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  // Display order inside the question (0-based).
+  position   Int
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, position])
+  @@map("options")
+}

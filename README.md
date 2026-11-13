@@ -67,8 +67,15 @@ Answering instantly gives about 1000 points, answering at the last second gives 
 ```
 QuizBattle/
 ├── docker-compose.yml
-├── backend/      # NestJS API + WebSocket gateway (port 3000)
-└── frontend/     # Next.js app (port 3001)
+├── backend/
+│   ├── prisma/           # Schema + migrations
+│   └── src/
+│       ├── config/       # Env schema (Zod) validated at boot
+│       ├── health/       # GET /health (Postgres + Redis)
+│       ├── prisma/       # PrismaService (driver adapter)
+│       ├── redis/        # RedisService (shared ioredis client)
+│       └── generated/    # Prisma Client (generated, not committed)
+└── frontend/             # Next.js app (port 3001)
 ```
 
 ## Getting Started
@@ -112,14 +119,38 @@ cp .env.example .env
 copy .env.example .env
 ```
 
-Then run:
+Generate Prisma Client, apply the migrations, then start the server:
 
 ```bash
-npx prisma migrate dev
+npm run db:generate    # prisma generate
+npm run db:migrate     # prisma migrate dev
 npm run start:dev
 ```
 
-The API runs at `http://localhost:3000`.
+The API runs at `http://localhost:3000`. Check that Postgres and Redis are
+reachable with `GET http://localhost:3000/health`:
+
+```json
+{
+  "status": "ok",
+  "info": {
+    "database": { "status": "up" },
+    "redis": { "status": "up" }
+  }
+}
+```
+
+Other Prisma helpers:
+
+| Command | What it does |
+|---|---|
+| `npm run db:generate` | Regenerate the client after editing `prisma/schema.prisma` |
+| `npm run db:migrate` | Create and apply a migration in development |
+| `npm run db:deploy` | Apply pending migrations (production) |
+| `npm run db:studio` | Open Prisma Studio |
+
+> `src/generated/prisma` is generated code and is **not** committed. Run
+> `npm run db:generate` after a fresh clone.
 
 ### 4. Set up the frontend
 
@@ -144,11 +175,15 @@ The app runs at `http://localhost:3001`.
 
 ```env
 DATABASE_URL=postgresql://quiz:quiz_password@localhost:5432/quiz_db
-REDIS_HOST=localhost
-REDIS_PORT=6379
+REDIS_URL=redis://localhost:6379
+CORS_ORIGINS=http://localhost:3001
 JWT_SECRET=change-me
 PORT=3000
 ```
+
+`CORS_ORIGINS` is a comma-separated list, so the deployed frontend origin can be
+added without code changes. Missing or invalid variables stop the app at boot
+with a readable error (see `backend/src/config/env.ts`).
 
 **frontend/.env.local**
 
@@ -161,6 +196,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 ## Roadmap
 
 - [x] Project setup (Docker Compose, NestJS, Next.js)
+- [x] Infrastructure foundation: env validation, Prisma + migrations, Redis client, health checks
 - [ ] **Phase 1:** Auth for hosts, Quiz and Question CRUD
 - [ ] **Phase 2:** Create room, join room, live lobby
 - [ ] **Phase 3:** Gameplay, timer, scoring, live leaderboard
