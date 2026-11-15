@@ -100,7 +100,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </Link>
             <Link
               href="/dashboard"
-              className="text-sm text-slate-400 transition hover:text-slate-100"
+              className="whitespace-nowrap text-sm text-slate-400 transition hover:text-slate-100"
             >
               คลังควิซ
             </Link>
@@ -112,7 +112,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </span>
             <button
               type="button"
-              className={secondaryButtonClass}
+              className={`${secondaryButtonClass} whitespace-nowrap`}
               onClick={handleLogout}
               disabled={loggingOut}
             >

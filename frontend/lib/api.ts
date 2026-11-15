@@ -2,12 +2,15 @@ import type {
   QuestionInput,
   QuizDetail,
   QuizSummary,
+  RoomState,
   User,
 } from "./types";
 
 const API_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
 ).replace(/\/+$/, "");
+
+export { API_URL };
 
 /** Error thrown for every non-2xx API response. */
 export class ApiError extends Error {
@@ -120,4 +123,14 @@ export const quizzesApi = {
     }),
   remove: (id: string) =>
     apiFetch<void>(`/quizzes/${id}`, { method: "DELETE" }),
+};
+
+export const roomsApi = {
+  /** Host only; starts a lobby for one of the host's quizzes. */
+  create: (quizId: string) =>
+    apiFetch<RoomState>("/rooms", {
+      method: "POST",
+      body: JSON.stringify({ quizId }),
+    }),
+  get: (code: string) => apiFetch<RoomState>(`/rooms/${code}`),
 };

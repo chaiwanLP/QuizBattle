@@ -9,7 +9,7 @@ const features = [
   {
     icon: "🔗",
     title: "แชร์โค้ดห้อง",
-    body: "ให้ผู้เล่นเข้าห้องด้วย PIN เดียวกันจากมือถือ (กำลังมา)",
+    body: "ผู้เล่นเข้าห้องด้วย PIN 6 หลักจากมือถือได้ทันที ไม่ต้องสมัครสมาชิก",
   },
   {
     icon: "⚡",
@@ -32,10 +32,10 @@ export default function HomePage() {
         </div>
         <nav className="flex items-center gap-2">
           <Link
-            href="/login"
+            href="/join"
             className="rounded-xl px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
           >
-            เข้าสู่ระบบ
+            เข้าร่วมเกม
           </Link>
           <Link
             href="/register"
@@ -76,6 +76,12 @@ export default function HomePage() {
             className="inline-flex h-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-8 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/10"
           >
             เข้าสู่ระบบ
+          </Link>
+          <Link
+            href="/join"
+            className="inline-flex h-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-8 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+          >
+            มีโค้ดห้องแล้ว? เข้าเล่น
           </Link>
         </div>
 

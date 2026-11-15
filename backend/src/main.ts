@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { CorsIoAdapter } from './socket-io.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,6 +18,7 @@ async function bootstrap() {
     .filter(Boolean);
 
   app.enableCors({ origin: origins, credentials: true });
+  app.useWebSocketAdapter(new CorsIoAdapter(app, origins));
 
   // Rejects state-changing requests that a browser reports as cross-origin
   // (CSRF). Origins are listed explicitly, CORS is not trusted implicitly.

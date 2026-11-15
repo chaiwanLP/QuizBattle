@@ -31,8 +31,9 @@ A host creates a room, players join with a 6-digit code, and everyone answers qu
 
 | Use case | Redis feature |
 |---|---|
-| Live room state | Hash + TTL |
-| Players in a room | Set / Hash |
+| Live room state | Hash + TTL (`room:{code}`) |
+| Room code reservation | Hash field set atomically with `HSETNX` |
+| Players in a room | Hash (`room:{code}:players`, playerId → JSON) |
 | Live scores and ranking | Sorted Set (`ZINCRBY`, `ZREVRANGE`) |
 | Prevent answering twice | Set (`SADD`) |
 | Broadcast across servers | Pub/Sub (`@socket.io/redis-adapter`) |
@@ -74,9 +75,11 @@ QuizBattle/
 │       ├── auth/         # Host register/login, JWT cookie guard
 │       ├── users/        # User lookups + email normalization
 │       ├── quizzes/      # Quiz/question/option CRUD
+│       ├── rooms/        # Room codes, lobby state, socket.io gateway
 │       ├── health/       # GET /health (Postgres + Redis)
 │       ├── prisma/       # PrismaService (driver adapter)
 │       ├── redis/        # RedisService (shared ioredis client)
+│       ├── socket-io.adapter.ts  # Socket.IO CORS adapter
 │       └── generated/    # Prisma Client (generated, not committed)
 └── frontend/             # Next.js app (port 3001)
 ```
@@ -181,6 +184,12 @@ The app runs at `http://localhost:3001` (the port is pinned in
 3. Edit the title, questions, options and per-question time limit, then save.
 4. The session is kept in an `httpOnly` cookie, so the browser stays signed in
    for 7 days.
+5. Press **เริ่มเกม** on a quiz in the dashboard to open a room. The host screen
+   shows the 6-digit PIN and updates the player list live.
+6. Players open `http://localhost:3001/join`, enter the PIN and a nickname — no
+   account needed. They can also open the invite link, which prefills the PIN.
+7. Closing the room (host screen) removes it from Redis and sends everyone back
+   to the join form.
 
 ## API
 
@@ -212,6 +221,46 @@ the token itself is not exposed in the JSON body.
 Validation rules: 1–100 questions, each with 2–6 options and exactly one correct
 option; `timeLimitSec` is 5–300 seconds (default 20). A quiz that belongs to a
 different host returns `404` so its existence isn't leaked.
+
+### Rooms
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/rooms` | Start a lobby for one of the host's quizzes (requires a session) |
+| `GET` | `/rooms/:code` | Public lobby snapshot (used by the join screen) |
+
+A room lives only in Redis and expires after 2 hours without activity. Codes are
+6 digits and are reserved atomically, so two hosts never receive the same PIN,
+and a host may keep several rooms open at once. Lobbies hold up to 200 players;
+nicknames are trimmed, whitespace-collapsed and limited to 20 characters.
+
+When a player's socket drops, their seat is removed — but only if that seat still
+belongs to the socket that just disconnected. A reload therefore reclaims the
+same seat (same player id) instead of leaving a ghost, and if the seat is already
+gone the client joins again with the same nickname.
+
+### Socket events
+
+The gateway runs on the same port as the API (`http://localhost:3000`). Host
+sockets authenticate with the `qb_session` cookie (or an `auth.token`), while
+players are identified by a server-generated player id that is stored in the
+browser so a reload can rejoin.
+
+| Direction | Event | Payload | Description |
+|---|---|---|---|
+| client → server | `room:join` | `{ code, nickname }` | Join a lobby (ack returns `playerId` + room) |
+| client → server | `room:rejoin` | `{ code, playerId }` | Rejoin after a reconnect or reload |
+| client → server | `room:leave` | — | Leave the lobby |
+| client → server | `host:join` | `{ code }` | Host joins their own lobby |
+| client → server | `host:close` | `{ code }` | Host closes the room |
+| server → client | `room:state` | `RoomState` | Full lobby snapshot, broadcast on every change |
+| server → client | `room:closed` | `{ code }` | Room was closed by the host |
+
+Every client event answers through an ack callback: `{ ok: true, ... }` or
+`{ ok: false, code, error }` — `code` is machine-readable
+(`room-not-found`, `player-not-found`, `room-full`, …) and `error` is already
+translated for the UI. Room events are scoped to the `room:{code}` channel and
+fanned out through the Redis adapter, so the gateway scales horizontally.
 
 CSRF protection is enabled in Nest and trusts the origins listed in
 `CORS_ORIGINS`; state-changing requests from any other origin are rejected.
@@ -247,7 +296,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 - [x] Project setup (Docker Compose, NestJS, Next.js)
 - [x] Infrastructure foundation: env validation, Prisma + migrations, Redis client, health checks
 - [x] **Phase 1:** Auth for hosts, Quiz and Question CRUD
-- [ ] **Phase 2:** Create room, join room, live lobby
+- [x] **Phase 2:** Create room, join room, live lobby
 - [ ] **Phase 3:** Gameplay, timer, scoring, live leaderboard
 - [ ] **Phase 4:** Save results to PostgreSQL, game history, reconnect
 - [ ] Polish: animations, sounds, themes

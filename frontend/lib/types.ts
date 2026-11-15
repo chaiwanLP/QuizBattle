@@ -39,3 +39,20 @@ export interface QuestionInput {
   timeLimitSec: number;
   options: { text: string; isCorrect: boolean }[];
 }
+
+export interface RoomPlayer {
+  id: string;
+  nickname: string;
+  joinedAt: string;
+}
+
+export interface RoomState {
+  code: string;
+  status: "lobby";
+  quizId: string;
+  quizTitle: string;
+  questionCount: number;
+  hostName: string;
+  createdAt: string;
+  players: RoomPlayer[];
+}

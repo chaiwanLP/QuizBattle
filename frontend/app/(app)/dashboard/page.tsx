@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Spinner } from "@/components/spinner";
-import { ApiError, quizzesApi } from "@/lib/api";
+import { ApiError, quizzesApi, roomsApi } from "@/lib/api";
 import type { QuizSummary } from "@/lib/types";
 import {
   cardClass,
@@ -27,6 +27,8 @@ export default function DashboardPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [startingId, setStartingId] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,12 +85,37 @@ export default function DashboardPage() {
           },
         ],
       });
+      // Reset the form before leaving so the dashboard is clean when the
+      // browser goes back to it.
+      setCreating(false);
+      setCreateOpen(false);
+      setTitle("");
+      setDescription("");
       router.push(`/quizzes/${quiz.id}`);
     } catch (error) {
       setCreateError(
         error instanceof ApiError ? error.message : "สร้างควิซไม่สำเร็จ",
       );
       setCreating(false);
+    }
+  }
+
+  async function handleStart(quiz: QuizSummary) {
+    setStartingId(quiz.id);
+    setStartError(null);
+    try {
+      const room = await roomsApi.create(quiz.id);
+      setStartingId(null);
+      router.push(`/host/rooms/${room.code}`);
+    } catch (error) {
+      setStartingId(null);
+      if (error instanceof ApiError && error.status === 401) {
+        router.replace("/login");
+        return;
+      }
+      setStartError(
+        error instanceof ApiError ? error.message : "เปิดห้องไม่สำเร็จ",
+      );
     }
   }
 
@@ -129,7 +156,7 @@ export default function DashboardPage() {
             คลังควิซของฉัน
           </h1>
           <p className="mt-2 text-sm text-slate-400">
-            สร้างชุดคำถามไว้เล่นกับผู้เล่นแบบเรียลไทม์ (เร็ว ๆ นี้)
+            สร้างชุดคำถาม แล้วเปิดห้องให้ผู้เล่นเข้ามาตอบพร้อมกันแบบเรียลไทม์
           </p>
         </div>
         <button
@@ -208,6 +235,19 @@ export default function DashboardPage() {
         </form>
       ) : null}
 
+      {startError ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <span>{startError}</span>
+          <button
+            type="button"
+            className="font-semibold underline-offset-2 hover:underline"
+            onClick={() => setStartError(null)}
+          >
+            ปิด
+          </button>
+        </div>
+      ) : null}
+
       {loadError ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
           <span>{loadError}</span>
@@ -282,11 +322,31 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between border-t border-white/10 pt-3 text-xs text-slate-500">
-                <span className="rounded-full bg-violet-500/10 px-2.5 py-1 font-medium text-violet-300">
-                  {quiz._count.questions} คำถาม
-                </span>
-                <span>แก้ไข {formatDate(quiz.updatedAt)}</span>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <span className="rounded-full bg-violet-500/10 px-2.5 py-1 font-medium text-violet-300">
+                    {quiz._count.questions} คำถาม
+                  </span>
+                  <span className="hidden sm:inline">
+                    แก้ไข {formatDate(quiz.updatedAt)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className={`${primaryButtonClass} px-3 py-1.5 text-xs`}
+                  onClick={() => handleStart(quiz)}
+                  disabled={startingId !== null || quiz._count.questions === 0}
+                  title={
+                    quiz._count.questions === 0
+                      ? "เพิ่มคำถามก่อนเปิดห้อง"
+                      : undefined
+                  }
+                >
+                  {startingId === quiz.id ? (
+                    <Spinner className="size-3.5" />
+                  ) : null}
+                  เริ่มเกม
+                </button>
               </div>
             </li>
           ))}
